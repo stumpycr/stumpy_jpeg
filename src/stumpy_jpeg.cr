@@ -1,5 +1,6 @@
 require "./canvas_ext"
 require "./transform"
+require "./bitio"
 
 # TODO: Write documentation for `StumpyJPEG`
 module StumpyJPEG
