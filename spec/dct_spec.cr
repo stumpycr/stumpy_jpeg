@@ -25,7 +25,7 @@ describe Transformation::DCT do
     ])
 
     dct_t = Transformation::DCT.new(8)
-    dct_t.transform(matrix).map {|v, r, c| v.round.to_i }.should eq(expected)
+    dct_t.transform(matrix).map {|v, i, r, c| v.round.to_i }.should eq(expected)
   end
 
   it "applies an IDCT transform to matrix" do
@@ -52,6 +52,6 @@ describe Transformation::DCT do
     ])
 
     dct_t = Transformation::DCT.new(8)
-    dct_t.inverse_transform(matrix).map {|v, r, c| v.round.to_i + 128 }.should eq(expected)
+    dct_t.inverse_transform(matrix).map {|v, i, r, c| v.round.to_i + 128 }.should eq(expected)
   end
 end

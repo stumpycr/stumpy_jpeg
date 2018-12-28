@@ -33,6 +33,19 @@ class BitIO::BitReader
     end
     val
   end
+
+  def read_remaining_bits
+    val = 0
+    while @mask != 0x80
+      val <<= 1
+
+      bit = read_bit
+      raise "End of file reached" if !bit
+
+      val |= bit
+    end
+    val
+  end
 end
 
 class BitIO::BitWriter
@@ -64,7 +77,7 @@ class BitIO::BitWriter
     end
   end
 
-  def flush(padding_bit : Int32 = 0)
+  def flush(padding_bit : Int32 = 1)
     while mask != 0
       write_bit(padding_bit)
     end
