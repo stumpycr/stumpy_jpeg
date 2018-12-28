@@ -63,4 +63,10 @@ class BitIO::BitWriter
       mask >>= 1
     end
   end
+
+  def flush(padding_bit : Int32 = 0)
+    while mask != 0
+      write_bit(padding_bit)
+    end
+  end
 end
