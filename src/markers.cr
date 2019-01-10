@@ -68,7 +68,7 @@ module StumpyJPEG
       super io
       io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
       tables.each do |table|
-        #TODO
+        # TODO
       end
     end
 
@@ -103,7 +103,7 @@ module StumpyJPEG
     def to_s(io : IO)
       super io
       io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
-      #TODO: Write tables
+      # TODO: Write tables
     end
 
     def self.from_io(io : IO)
@@ -118,27 +118,6 @@ module StumpyJPEG
       end
 
       self.new(tables)
-    end
-  end
-
-  class DAC < Segment
-    getter table
-
-    def initialize(@table)
-      super Markers::DAC
-    end
-
-    def length
-      # TODO:
-    end
-
-    def to_s(io : IO)
-      super io
-      #TODO: Write length
-      #TODO: Write table
-    end
-
-    def self.from_io(io : IO)
     end
   end
 
@@ -166,24 +145,6 @@ module StumpyJPEG
       self.new(interval)
     end
   end
-
-  # TODO: Delete this?
-  # class DNL < Segment
-  #   getter lines
-  #
-  #   def initialize(@lines)
-  #     super Markers::DNL
-  #   end
-  #
-  #   def to_s(io : IO)
-  #     super io
-  #     io.write_bytes(4_u16, IO::ByteFormat::BigEndian)
-  #     io.write_bytes(interval.to_u16, IO::ByteFormat::BigEndian)
-  #   end
-  #
-  #   def self.from_io(io)
-  #   end
-  # end
 
   class SOF < Segment
     getter bit_precision : Int32
@@ -301,7 +262,6 @@ module StumpyJPEG
       self.new(bytes, 0)
     end
 
-    # TODO: Check for marker?
     def jfif?
       data = IO::Memory.new(bytes)
       data.gets('\0', chomp: true) == "JFIF"
@@ -408,7 +368,7 @@ module StumpyJPEG
               data_units.delete(coords)
             end
           end
-          average = (average/(h * v)).map {|e, l, r, c| e.round.to_i }
+          average = (average/(h * v)).map { |e, l, r, c| e.round.to_i }
           data_units[{x, y}] = average
         end
       end

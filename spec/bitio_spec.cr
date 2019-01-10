@@ -30,7 +30,6 @@ describe BitIO::BitReader do
     br.read_bits(3).should eq(1)
     br.read_bits(3).should eq(4)
   end
-
 end
 
 describe BitIO::BitWriter do

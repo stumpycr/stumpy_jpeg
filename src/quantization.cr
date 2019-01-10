@@ -1,9 +1,7 @@
 require "matrix"
 
 module StumpyJPEG
-
   module Quantization
-
     class Table
       getter precision : Int32
       getter table_id : Int32
@@ -61,9 +59,6 @@ module StumpyJPEG
 
         self.new(precision, table_id, elements)
       end
-
     end
-
   end
-
 end

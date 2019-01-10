@@ -1,7 +1,5 @@
 module StumpyJPEG
-
   module Huffman
-
     class Table
       getter table_class : Int32
       getter table_id : Int32
@@ -44,7 +42,7 @@ module StumpyJPEG
         17 + @encoding_map.size
       end
 
-      #TODO: Write
+      # TODO: Write
       def to_s(io : IO)
       end
 
@@ -69,7 +67,7 @@ module StumpyJPEG
 
         16.times do |i|
           1.upto(bits[i]) do
-            huffsize <<  i + 1
+            huffsize << i + 1
           end
         end
 
@@ -109,8 +107,6 @@ module StumpyJPEG
         end
         map
       end
-
     end
   end
-
 end

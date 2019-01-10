@@ -1,7 +1,6 @@
 require "./spec_helper"
 
 describe StumpyJPEG::Quantization::Table do
-
   elems = Matrix.new(8, 8) { |i| i + 1 }
   dqt = StumpyJPEG::Quantization::Table.new(0, 0, elems)
 
@@ -18,5 +17,4 @@ describe StumpyJPEG::Quantization::Table do
 
     dqt.dequantize(matrix).should eq(expected)
   end
-
 end

@@ -16,5 +16,4 @@ describe StumpyJPEG::Huffman::Table do
     h_table.decode(2, 3).should eq(0x01_u8)
     h_table.decode(0, 1).should eq(nil)
   end
-
 end

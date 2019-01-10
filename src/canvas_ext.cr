@@ -2,7 +2,6 @@ require "stumpy_core"
 require "matrix"
 
 module StumpyCore
-
   struct RGBA
     def self.from_ycbcr(values)
       y, cb, cr = values
@@ -26,15 +25,14 @@ module StumpyCore
   end
 
   class Canvas
-
     def self.compose_ycbcr(matrices)
       width = matrices.first.column_count
       height = matrices.first.row_count
 
       self.new(width, height) do |w, h|
-        y  = matrices[0]?.try {|m| (m[w, h] + 128).clamp(0, 255) } || 0
-        cb = matrices[1]?.try {|m| (m[w, h] + 128).clamp(0, 255) } || 128
-        cr = matrices[2]?.try {|m| (m[w, h] + 128).clamp(0, 255) } || 128
+        y = matrices[0]?.try { |m| (m[w, h] + 128).clamp(0, 255) } || 0
+        cb = matrices[1]?.try { |m| (m[w, h] + 128).clamp(0, 255) } || 128
+        cr = matrices[2]?.try { |m| (m[w, h] + 128).clamp(0, 255) } || 128
         RGBA.from_ycbcr(y, cb, cr)
       end
     end
@@ -93,7 +91,6 @@ module StumpyCore
     end
 
     def section(width, height, x, y)
-
       width.times do |w|
         height.times do |cy|
           if pix = safe_get(ix, iy)
@@ -107,9 +104,6 @@ module StumpyCore
           end
         end
       end
-
     end
-
   end
-
 end
