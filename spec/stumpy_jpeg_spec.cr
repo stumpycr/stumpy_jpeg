@@ -4,17 +4,6 @@ describe StumpyJPEG do
   # TODO: Write tests
 
   it "writes a file" do
-    canvas = StumpyCore::Canvas.new(8, 8, StumpyCore::RGBA.from_hex("#ffffff"))
-
-    8.times do |i|
-      8.times do |j|
-        canvas[i, j] = StumpyCore::RGBA.from_hex("#007fff") if i < 4
-      end
-    end
-
-    io = IO::Memory.new
-    StumpyJPEG.write(canvas, io)
-
     false.should eq(false)
   end
 
@@ -64,5 +53,9 @@ describe StumpyJPEG do
     expected.set(3, 3, StumpyCore::RGBA.from_hex("#606060"))
 
     canvas.should eq(expected)
+  end
+
+  it "decodes large images" do
+    canvas = StumpyJPEG.read("spec/images/stones.jpeg")
   end
 end

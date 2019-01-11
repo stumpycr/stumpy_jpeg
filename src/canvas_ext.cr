@@ -30,9 +30,9 @@ module StumpyCore
       height = matrices.first.row_count
 
       self.new(width, height) do |w, h|
-        y = matrices[0]?.try { |m| (m[w, h] + 128).clamp(0, 255) } || 0
-        cb = matrices[1]?.try { |m| (m[w, h] + 128).clamp(0, 255) } || 128
-        cr = matrices[2]?.try { |m| (m[w, h] + 128).clamp(0, 255) } || 128
+        y = matrices[0]?.try { |m| (m[h, w] + 128).clamp(0, 255) } || 0
+        cb = matrices[1]?.try { |m| (m[h, w] + 128).clamp(0, 255) } || 128
+        cr = matrices[2]?.try { |m| (m[h, w] + 128).clamp(0, 255) } || 128
         RGBA.from_ycbcr(y, cb, cr)
       end
     end
