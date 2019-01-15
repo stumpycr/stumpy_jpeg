@@ -32,11 +32,13 @@ module StumpyJPEG
     def decode(io : IO)
       reset
 
-      raise "Invalid JPEG file" if read_marker(io) != Markers::SOI
+      raise "Invalid JPEG file" if io.read_byte != Markers::START || io.read_byte != Markers::SOI
 
       loop do
         marker = @buffer_marker || read_marker(io)
         break if marker == Markers::EOI
+
+        @buffer_marker = nil if @buffer_marker
 
         case marker
         when Markers::DQT then parse_dqt(io)
