@@ -6,8 +6,9 @@ module StumpyJPEG
 
       @dct = Transformation::DCT.new(8)
       @dqts = uninitialized Quantization::Table[4]
-      @dhts_ac = uninitialized Huffman::Table[4]
-      @dhts_dc = uninitialized Huffman::Table[4]
+      #TODO : Don't assume it's always Huffman
+      @entropy_ac = uninitialized Huffman::Table[4]
+      @entropy_dc = uninitialized Huffman::Table[4]
 
       @comments = [] of String
       @app = [] of APP
@@ -16,6 +17,9 @@ module StumpyJPEG
       @bit_precision = -1
       @image_height = -1
       @image_width = -1
+
+      @max_h = 0
+      @max_v = 0
 
       @number_of_components = -1
       @buffer_marker = nil.as(UInt8?)
@@ -90,8 +94,8 @@ module StumpyJPEG
     private def parse_dht(io)
       dht = DHT.from_io(io)
       dht.tables.each do |table|
-        @dhts_dc[table.table_id] = table if table.table_class == 0
-        @dhts_ac[table.table_id] = table if table.table_class == 1
+        @entropy_dc[table.table_id] = table if table.table_class == 0
+        @entropy_ac[table.table_id] = table if table.table_class == 1
       end
     end
 
@@ -116,6 +120,7 @@ module StumpyJPEG
 
     # Parses a SOFn marker
     private def parse_sof(io, n)
+      raise "Only Baseline JPEGs supported" if n != 0
       sof = SOF.from_io(io)
       @number_of_components = sof.number_of_components
       @bit_precision = sof.bit_precision
@@ -125,6 +130,8 @@ module StumpyJPEG
         @components[component.component_id] = component
         @last_dc_values[component.component_id] = 0
       end
+      @max_h = @components.max_of { |key, comp| comp.h }
+      @max_v = @components.max_of { |key, comp| comp.v }
     end
 
     # Parses a SOS marker and following data
@@ -160,8 +167,8 @@ module StumpyJPEG
 
     # Parses sequential interleaved data
     private def parse_interleaved(io, sos)
-      max_h = @components.max_of { |key, comp| comp.h }
-      max_v = @components.max_of { |key, comp| comp.v }
+      max_h = @max_h
+      max_v = @max_v
       mcu_x = (@image_width + 8 * max_h - 1) / (8 * max_h)
       mcu_y = (@image_height + 8 * max_v - 1) / (8 * max_v)
 
@@ -188,8 +195,8 @@ module StumpyJPEG
             component = @components[s.component_id]
             dqt = @dqts[component.dqt_table_id]
             # TODO: Don't assume its always huffman
-            dc_table = @dhts_dc[s.dc_table_id]
-            ac_table = @dhts_ac[s.ac_table_id]
+            dc_table = @entropy_dc[s.dc_table_id]
+            ac_table = @entropy_ac[s.ac_table_id]
 
             (0...component.v).each do |c_y|
               (0...component.h).each do |c_x|
@@ -209,8 +216,8 @@ module StumpyJPEG
 
     # Parses sequential non interleaved data
     private def parse_non_interleaved(io, sos)
-      max_h = @components.max_of { |key, comp| comp.h }
-      max_v = @components.max_of { |key, comp| comp.v }
+      max_h = @max_h
+      max_v = @max_v
 
       selector = sos.selectors.first
       component = @components[selector.component_id]
@@ -241,9 +248,8 @@ module StumpyJPEG
           end
 
           dqt = @dqts[component.dqt_table_id]
-          # TODO: Don't assume its always huffman
-          dc_table = @dhts_dc[selector.dc_table_id]
-          ac_table = @dhts_ac[selector.ac_table_id]
+          dc_table = @entropy_dc[selector.dc_table_id]
+          ac_table = @entropy_ac[selector.ac_table_id]
 
           (0...component.v).each do |c_y|
             (0...component.h).each do |c_x|
