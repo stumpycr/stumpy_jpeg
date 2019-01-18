@@ -1,7 +1,8 @@
 require "./spec_helper"
 
 describe Transformation::DCT do
-  it "applies a DCT transform to matrix" do
+
+  context "DCT" do
     matrix = Matrix.rows([
       [-98,  -93,  -98,  -96,  -97,  -111, -111, -104],
       [-108, -103, -109, -111, -106, -114, -118, -116],
@@ -24,11 +25,18 @@ describe Transformation::DCT do
       [ 4,    6,    3,  -6,  -2,   0,   2,  2]
     ])
 
-    dct_t = Transformation::DCT.new(8)
-    dct_t.transform(matrix).map { |v, i, r, c| v.round.to_i }.should eq(expected)
+    it "applies a DCT transform to matrix" do
+      dct_t = Transformation::DCT.new(8)
+      dct_t.transform(matrix).map { |v, i, r, c| v.round.to_i }.should eq(expected)
+    end
+
+    it "applies a fast DCT transform to matrix" do
+      dct_t = Transformation::DCT.new(8)
+      dct_t.fast_transform(matrix).map { |v, i, r, c| v.round.to_i }.should eq(expected)
+    end
   end
 
-  it "applies an IDCT transform to matrix" do
+  context "IDCT" do
     matrix = Matrix.rows([
       [-455,  148, -35, -16,  14, -24, -2, 0],
       [-440, -129,  45,  12, -15,  10,  0, 0],
@@ -51,7 +59,15 @@ describe Transformation::DCT do
       [194, 199, 199, 208, 201, 150, 108, 109]
     ])
 
-    dct_t = Transformation::DCT.new(8)
-    dct_t.inverse_transform(matrix).map { |v, i, r, c| v.round.to_i + 128 }.should eq(expected)
+    it "applies an IDCT transform to matrix" do
+      dct_t = Transformation::DCT.new(8)
+      dct_t.inverse_transform(matrix).map { |v, i, r, c| v.round.to_i + 128 }.should eq(expected)
+    end
+
+    it "applies a fast IDCT transform to matrix" do
+      dct_t = Transformation::DCT.new(8)
+      dct_t.fast_inverse_transform(matrix).map { |v, i, r, c| v.round.to_i + 128 }.should eq(expected)
+    end
   end
+  
 end

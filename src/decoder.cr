@@ -277,7 +277,7 @@ module StumpyJPEG
       end
 
       data_unit = dqt.dequantize(data_unit)
-      data_unit = @dct.inverse_transform(data_unit).map { |e, l, r, c| e.round.to_i }
+      data_unit = @dct.fast_inverse_transform(data_unit).map { |e, l, r, c| e.round.to_i }
       data_unit
     end
 
