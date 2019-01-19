@@ -5,57 +5,41 @@ class Transformation::DCT
   A = [0.0, C[4], C[2] - C[6], C[4], C[2] + C[6], C[6], C[2]]
   S = [1.0/(2*Math.sqrt(2))] + (1..7).map { |n| 1.0/(4*C[n]) }
 
-  @matrix : Matrix(Float64)
-  @t_matrix : Matrix(Float64)
-
-  def initialize(size : Int32)
-    @matrix = Matrix.new(size, size) do |l, p, q|
-      if p == 0
-        1 / Math.sqrt(size.to_f)
-      else
-        Math.sqrt(2 / size.to_f) * Math.cos(Math::PI*(2*q + 1)*p / (2*size))
-      end
-    end
-    @t_matrix = @matrix.transpose
-  end
-
-  def transform(a : Matrix)
-    @matrix * a * @t_matrix
-  end
-
-  def fast_transform(a : Matrix)
-    rows = a.rows.map do |row|
-      fast_transform_vector(row)
+  def self.fast_transform(a : Matrix)
+    rng = 0...8
+    rows = rng.map do |row|
+      vector = {a[row, 0], a[row, 1], a[row, 2], a[row, 3], a[row, 4], a[row, 5], a[row, 6], a[row, 7]}
+      fast_transform_vector(vector)
     end
     
     tmp = Matrix.rows(rows)
     
-    columns = tmp.columns.map do |column|
-      fast_transform_vector(column)
+    columns = rng.map do |col|
+      vector = {tmp[0, col], tmp[1, col], tmp[2, col], tmp[3, col], tmp[4, col], tmp[5, col], tmp[6, col], tmp[7, col]}
+      fast_transform_vector(vector)
     end
 
     Matrix.columns(columns)
   end
 
-  def inverse_transform(b : Matrix)
-    @t_matrix * b * @matrix
-  end
-
-  def fast_inverse_transform(b : Matrix)
-    rows = b.rows.map do |row|
-      fast_inverse_transform_vector(row)
+  def self.fast_inverse_transform(b : Matrix)
+    rng = 0...8
+    rows = rng.map do |row|
+      vector = {b[row, 0], b[row, 1], b[row, 2], b[row, 3], b[row, 4], b[row, 5], b[row, 6], b[row, 7]}
+      fast_inverse_transform_vector(vector)
     end
     
     tmp = Matrix.rows(rows)
     
-    columns = tmp.columns.map do |column|
-      fast_inverse_transform_vector(column)
+    columns = rng.map do |col|
+      vector = {tmp[0, col], tmp[1, col], tmp[2, col], tmp[3, col], tmp[4, col], tmp[5, col], tmp[6, col], tmp[7, col]}
+      fast_inverse_transform_vector(vector)
     end
 
     Matrix.columns(columns)
   end
 
-  private def fast_transform_vector(vector)
+  private def self.fast_transform_vector(vector)
     s10 = vector[0] + vector[7]
     s11 = vector[1] + vector[6]
     s12 = vector[2] + vector[5]
@@ -106,7 +90,7 @@ class Transformation::DCT
     ]
   end
 
-  private def fast_inverse_transform_vector(vector)    
+  private def self.fast_inverse_transform_vector(vector)    
     s60 = vector[0] / S[0]
     s61 = vector[4] / S[4]
     s82 = vector[2] / S[2]

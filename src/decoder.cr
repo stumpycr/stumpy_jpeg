@@ -4,7 +4,6 @@ module StumpyJPEG
       @components = {} of Int32 => Component
       @last_dc_values = {} of Int32 => Int32
 
-      @dct = Transformation::DCT.new(8)
       @dqts = uninitialized Quantization::Table[4]
       #TODO : Don't assume it's always Huffman
       @entropy_ac = uninitialized Huffman::Table[4]
@@ -277,7 +276,7 @@ module StumpyJPEG
       end
 
       data_unit = dqt.dequantize(data_unit)
-      data_unit = @dct.fast_inverse_transform(data_unit).map { |e, l, r, c| e.round.to_i }
+      data_unit = Transformation::DCT.fast_inverse_transform(data_unit).map { |e, l, r, c| e.round.to_i }
       data_unit
     end
 

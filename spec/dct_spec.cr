@@ -25,14 +25,8 @@ describe Transformation::DCT do
       [ 4,    6,    3,  -6,  -2,   0,   2,  2]
     ])
 
-    it "applies a DCT transform to matrix" do
-      dct_t = Transformation::DCT.new(8)
-      dct_t.transform(matrix).map { |v, i, r, c| v.round.to_i }.should eq(expected)
-    end
-
     it "applies a fast DCT transform to matrix" do
-      dct_t = Transformation::DCT.new(8)
-      dct_t.fast_transform(matrix).map { |v, i, r, c| v.round.to_i }.should eq(expected)
+      Transformation::DCT.fast_transform(matrix).map { |v, i, r, c| v.round.to_i }.should eq(expected)
     end
   end
 
@@ -59,14 +53,8 @@ describe Transformation::DCT do
       [194, 199, 199, 208, 201, 150, 108, 109]
     ])
 
-    it "applies an IDCT transform to matrix" do
-      dct_t = Transformation::DCT.new(8)
-      dct_t.inverse_transform(matrix).map { |v, i, r, c| v.round.to_i + 128 }.should eq(expected)
-    end
-
     it "applies a fast IDCT transform to matrix" do
-      dct_t = Transformation::DCT.new(8)
-      dct_t.fast_inverse_transform(matrix).map { |v, i, r, c| v.round.to_i + 128 }.should eq(expected)
+      Transformation::DCT.fast_inverse_transform(matrix).map { |v, i, r, c| v.round.to_i + 128 }.should eq(expected)
     end
   end
   
