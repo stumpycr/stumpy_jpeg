@@ -294,29 +294,31 @@ module StumpyJPEG
     end
 
     private def decode_ac(bit_reader, ac_table)
-      ac_values = [] of Int32
-      while ac_values.size < 63
+      i = 0
+      ac_values = Array.new(64, 0)
+      while i < 63
         byte = ac_table.decode_from_io(bit_reader)
 
         if byte == 0xF0
-          16.times { ac_values << 0 }
+          i += 16
           next
         end
 
         if byte == 0x00
-          (63 - ac_values.size).times { ac_values << 0 }
+          i = 63
           next
         end
 
         zero_run = (byte & 0xF0) >> 4
         magnitude = byte & 0x0F
 
-        zero_run.times { ac_values << 0 }
+        i += zero_run
 
         adds = bit_reader.read_bits(magnitude.to_i)
         ac = extend_coefficient(adds, magnitude)
 
-        ac_values << ac
+        ac_values[i] = ac
+        i += 1
       end
       ac_values
     end
