@@ -12,10 +12,8 @@ class Transformation::DCT
       fast_transform_vector(vector)
     end
     
-    tmp = Matrix.rows(rows)
-    
     columns = rng.map do |col|
-      vector = {tmp[0, col], tmp[1, col], tmp[2, col], tmp[3, col], tmp[4, col], tmp[5, col], tmp[6, col], tmp[7, col]}
+      vector = {rows[0][col], rows[1][col], rows[2][col], rows[3][col], rows[4][col], rows[5][col], rows[6][col], rows[7][col]}
       fast_transform_vector(vector)
     end
 
@@ -29,10 +27,8 @@ class Transformation::DCT
       fast_inverse_transform_vector(vector)
     end
     
-    tmp = Matrix.rows(rows)
-    
     columns = rng.map do |col|
-      vector = {tmp[0, col], tmp[1, col], tmp[2, col], tmp[3, col], tmp[4, col], tmp[5, col], tmp[6, col], tmp[7, col]}
+      vector = {rows[0][col], rows[1][col], rows[2][col], rows[3][col], rows[4][col], rows[5][col], rows[6][col], rows[7][col]}
       fast_inverse_transform_vector(vector)
     end
 
