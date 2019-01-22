@@ -328,23 +328,22 @@ module StumpyJPEG
     def upsample(max_h, max_v)
       return true if !downsampled
 
-      data_units.keys.each do |coords|
-        du = data_units[coords]
-        du_x, du_y = coords
-
-        (v...max_v).each do |y|
-          dupe_coords = {du_x, du_y + y}
-          data_units[dupe_coords] = du
-        end
+      if max_h == h && max_v == v
+        @downsampled = false
+        return true  
       end
 
-      data_units.keys.each do |coords|
+      keys = data_units.keys
+      keys.each do |coords|
         du = data_units[coords]
         du_x, du_y = coords
 
-        (h...max_h).each do |x|
-          dupe_coords = {du_x + x, du_y}
-          data_units[dupe_coords] = du
+        (0...max_v).each do |y|
+          (0...max_h).each do |x|
+            next if y == 0 && x == 0
+            dupe_coords = {du_x + x, du_y + y}
+            data_units[dupe_coords] = du
+          end
         end
       end
 
