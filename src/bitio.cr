@@ -9,10 +9,7 @@ class BitIO::BitReader
 
   def read_bit
     if @mask == 0x80
-      byte = @io.read_byte
-      return nil if !byte
-
-      @rack = byte
+      return nil if !prepare_next_byte
     end
     val = @rack & @mask
     @mask >>= 1
@@ -45,6 +42,16 @@ class BitIO::BitReader
       val |= bit
     end
     val
+  end
+
+  def skip_remaining_bits
+    @mask = 0x80
+  end
+
+  private def prepare_next_byte
+    if byte = @io.read_byte
+      @rack = byte
+    end
   end
 end
 
