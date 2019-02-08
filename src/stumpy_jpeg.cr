@@ -6,7 +6,7 @@ require "./bitio"
 
 require "./standards"
 
-require "./markers"
+require "./segments"
 require "./decoder"
 
 # TODO: Write documentation for `StumpyJPEG`
