@@ -191,9 +191,7 @@ module StumpyJPEG
       end
       io.write_byte(spectral_start.to_u8)
       io.write_byte(spectral_end.to_u8)
-      bw = BitIO::BitWriter.new(io)
-      bw.write_bits(approx_high, 4)
-      bw.write_bits(approx_low, 4)
+      io.write_byte(((approx_high << 4) | approx_low).to_8)
     end
 
     def self.from_io(io)
@@ -355,11 +353,7 @@ module StumpyJPEG
 
     def to_s(io : IO)
       io.write_byte(component_id)
-
-      bw = BitIO::BitWriter.new(io)
-      bw.write_bits(h, 4)
-      bw.write_bits(v, 4)
-
+      io.write_byte(((h << 4) | v).to_u8)
       io.write_byte(dqt_table_id)
     end
 
@@ -386,10 +380,7 @@ module StumpyJPEG
 
     def to_s(io : IO)
       io.write_byte(component_id)
-
-      bw = BitIO::BitWriter.new(io)
-      bw.write_bits(dc_table_id, 4)
-      bw.write_bits(ac_table_id, 4)
+      io.write_byte(((dc_table_id << 4) | ac_table_id).to_u8)
     end
 
     def self.from_io(io)

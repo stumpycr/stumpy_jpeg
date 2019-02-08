@@ -31,10 +31,7 @@ module StumpyJPEG
       end
 
       def to_s(io : IO)
-        bw = BitIO::BitWriter.new(io)
-        bw.write_bits(precision, 4)
-        bw.write_bits(table_id, 4)
-
+        io.write_byte(((precision << 4) | table_id).to_u8)
         elements.each do |elem|
           if precision == 0
             io.write_byte(elem.to_u8)
