@@ -1,17 +1,9 @@
-require "./canvas_ext"
-require "./transform"
-require "./quantization"
-require "./huffman"
-require "./bitio"
-
-require "./standards"
-
-require "./segments"
-require "./decoder"
+require "stumpy_core"
+require "./stumpy_jpeg/*"
 
 # TODO: Write documentation for `StumpyJPEG`
 module StumpyJPEG
-  VERSION = "0.1.0"
+  include StumpyCore
 
   def self.read(file : String)
     File.open(file) do |io|
@@ -19,8 +11,30 @@ module StumpyJPEG
     end
   end
 
+  def self.read(file : String)
+    File.open(file) do |io|
+      read(io) do |canvas|
+        yield canvas
+      end
+    end
+  end
+
   def self.read(io : IO)
-    decoder = Decoder.new
-    decoder.decode(io)
+    jpeg = JPEG.new
+    Datastream.new(io).read do |marker, stream|
+      jpeg.parse_segment(marker, stream)
+    end
+    jpeg.update_canvas
+    jpeg.canvas
+  end
+
+  def self.read(io : IO)
+    jpeg = JPEG.new
+    Datastream.new(io).read do |marker, io|
+      jpeg.parse_segment(marker, io)
+      jpeg.update_canvas
+      yield jpeg.canvas
+    end
+    jpeg.canvas
   end
 end

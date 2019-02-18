@@ -1,10 +1,10 @@
 require "./spec_helper"
 
-describe BitIO::BitReader do
+describe StumpyJPEG::BitReader do
   it "reads a single bit from an io" do
     io = IO::Memory.new("Hello")
 
-    br = BitIO::BitReader.new(io)
+    br = StumpyJPEG::BitReader.new(io)
     br.read_bit.should eq(0)
     br.read_bit.should eq(1)
     br.read_bit.should eq(0)
@@ -15,7 +15,7 @@ describe BitIO::BitReader do
   it "reads multiple bits from an io" do
     io = IO::Memory.new("Hello")
 
-    br = BitIO::BitReader.new(io)
+    br = StumpyJPEG::BitReader.new(io)
     br.read_bits(3).should eq(2)
     br.read_bits(1).should eq(0)
     br.read_bits(3).should eq(4)
@@ -24,7 +24,7 @@ describe BitIO::BitReader do
   it "reads past the first byte from an io" do
     io = IO::Memory.new("Hello")
 
-    br = BitIO::BitReader.new(io)
+    br = StumpyJPEG::BitReader.new(io)
     br.read_bits(7)
 
     br.read_bits(3).should eq(1)
@@ -32,11 +32,11 @@ describe BitIO::BitReader do
   end
 end
 
-describe BitIO::BitWriter do
+describe StumpyJPEG::BitWriter do
   it "writes a single bit into an io" do
     io = IO::Memory.new
 
-    bw = BitIO::BitWriter.new(io)
+    bw = StumpyJPEG::BitWriter.new(io)
     bw.write_bit(1)
     bw.write_bit(1)
     bw.write_bit(1)
@@ -53,7 +53,7 @@ describe BitIO::BitWriter do
   it "writes multiple bits into an io" do
     io = IO::Memory.new
 
-    bw = BitIO::BitWriter.new(io)
+    bw = StumpyJPEG::BitWriter.new(io)
     bw.write_bits(7, 8)
 
     io.rewind
@@ -63,7 +63,7 @@ describe BitIO::BitWriter do
   it "writes past the first byte into an io" do
     io = IO::Memory.new
 
-    bw = BitIO::BitWriter.new(io)
+    bw = StumpyJPEG::BitWriter.new(io)
     bw.write_bits(7, 7)
     bw.write_bits(128, 9)
 

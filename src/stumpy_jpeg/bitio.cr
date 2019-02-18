@@ -1,4 +1,4 @@
-class BitIO::BitReader
+class StumpyJPEG::BitReader
   @rack : UInt8
   @mask : UInt8
 
@@ -24,7 +24,7 @@ class BitIO::BitReader
       val <<= 1
 
       bit = read_bit
-      raise "End of file reached" if !bit
+      raise IO::EOFError.new if !bit
 
       val |= bit
     end
@@ -37,7 +37,7 @@ class BitIO::BitReader
       val <<= 1
 
       bit = read_bit
-      raise "End of file reached" if !bit
+      raise IO::EOFError.new if !bit
 
       val |= bit
     end
@@ -48,14 +48,27 @@ class BitIO::BitReader
     @mask = 0x80
   end
 
+  def read_restart_marker
+    skip_remaining_bits
+    if (byte = @io.read_byte) && (marker = @io.read_byte)
+      raise "Expecting restart marker" if byte != Markers::START
+      marker
+    else
+      raise IO::EOFError.new
+    end
+  end
+
   private def prepare_next_byte
     if byte = @io.read_byte
+      if byte == Markers::START
+        raise "Unexpected marker found inside entropy encoded data" if @io.read_byte != Markers::SKIP
+      end
       @rack = byte
     end
   end
 end
 
-class BitIO::BitWriter
+class StumpyJPEG::BitWriter
   @rack : UInt8
   @mask : UInt8
 
