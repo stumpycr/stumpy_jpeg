@@ -1,4 +1,5 @@
 require "matrix"
+require "./standards"
 
 module StumpyJPEG
   module Quantization
@@ -46,14 +47,14 @@ module StumpyJPEG
         precision = table >> 4
         table_id = table & 0x0F
 
-        elements = Array(Int32).new(64) do
+        elements = Array(Int32).new(64, 0)
+        ZIGZAG.each_with_index do |v, i|
           if precision == 0
-            io.read_byte.not_nil!.to_i
+            elements[v] = io.read_byte.not_nil!.to_i
           else
-            io.read_bytes(UInt16, IO::ByteFormat::BigEndian).to_i
+            elements[v] = io.read_bytes(UInt16, IO::ByteFormat::BigEndian).to_i
           end
         end
-
         self.new(precision, table_id, elements)
       end
     end
