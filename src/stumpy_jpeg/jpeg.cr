@@ -111,9 +111,7 @@ module StumpyJPEG
         data_unit[v] = coef[i]
       end
 
-      data_unit = dqt.dequantize(data_unit)
-      data_unit = Transformation::DCT.fast_inverse_transform(data_unit).map { |e, l, r, c| e.round.to_i }
-      data_unit
+      Transformation.fast_inverse_transform(data_unit, dqt)
     end
 
     def decode_baseline_dc(bit_reader, dc_table, component_id)
