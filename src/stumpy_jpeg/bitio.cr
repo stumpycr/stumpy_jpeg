@@ -18,7 +18,7 @@ class StumpyJPEG::BitReader
     return (val > 0) ? 1 : 0
   end
 
-  def read_bits(count : Int32)
+  def read_bits(count : Int)
     val = 0
     count.times do
       val <<= 1

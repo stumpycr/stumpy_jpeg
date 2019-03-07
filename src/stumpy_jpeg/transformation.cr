@@ -6,6 +6,10 @@ module StumpyJPEG
     A = [0.0, 0.7071067811865476, 0.5411961001461969, 0.7071067811865476, 1.3065629648763766, 0.38268343236508984, 0.9238795325112867]
 
     def self.fast_inverse_transform(coefficients : Matrix, quantization_table : Quantization::Table)
+      fast_inverse_transform(coefficients.to_a, quantization_table)
+    end
+
+    def self.fast_inverse_transform(coefficients : Array, quantization_table : Quantization::Table)
       tmp = StaticArray(Float64, 64).new(0.0)
       output = Matrix.new(8, 8, 0)
       

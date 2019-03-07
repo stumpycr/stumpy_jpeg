@@ -19,8 +19,6 @@ module StumpyJPEG
 
     getter max_h
     getter max_v
-
-    getter last_dc_values
     
     def initialize
       @canvas = Canvas.new(0,0)
@@ -37,7 +35,6 @@ module StumpyJPEG
       @image_height = 0
       @max_h = 1
       @max_v = 1
-      @last_dc_values = {} of Int32 => Int32
     end
 
     def update_canvas
@@ -74,7 +71,7 @@ module StumpyJPEG
         mcu_x.times do |m_x|
 
           if restart?(decoded_mcus, restart_count, reader)
-            last_dc_values.transform_values { 0 }
+            components.each {|id, c| c.reset_last_dc_value }
             restart_count += 1
             decoded_mcus = 0
           end
@@ -88,7 +85,7 @@ module StumpyJPEG
 
             (0...component.v).each do |c_y|
               (0...component.h).each do |c_x|
-                data_unit = decode_baseline(reader, dqt, dc_table, ac_table, s.component_id)
+                data_unit = component.decode_sequential(reader, dc_table, ac_table, dqt)
                 component.data_units[{m_x*max_h + c_x, m_y*max_v + c_y}] = data_unit
               end
             end
@@ -98,81 +95,6 @@ module StumpyJPEG
         end
       end
 
-    end
-
-    def decode_baseline(bit_reader, dqt, dc_table, ac_table, component_id)
-      dc = decode_baseline_dc(bit_reader, dc_table, component_id)
-      ac = decode_baseline_ac(bit_reader, ac_table)
-
-      coef = [dc] + ac
-
-      data_unit = Matrix(Int32).new(8, 8, 0)
-      ZIGZAG.each_with_index do |v, i|
-        data_unit[v] = coef[i]
-      end
-
-      Transformation.fast_inverse_transform(data_unit, dqt)
-    end
-
-    def decode_baseline_dc(bit_reader, dc_table, component_id)
-      magnitude = dc_table.decode_from_io(bit_reader)
-
-      adds = bit_reader.read_bits(magnitude.to_i)
-      diff = extend_coefficient(adds, magnitude)
-
-      dc = diff + last_dc_values[component_id]
-
-      last_dc_values[component_id] = dc
-      dc
-    end
-
-    def decode_baseline_ac(bit_reader, ac_table)
-      i = 0
-      ac_values = Array.new(64, 0)
-      while i < 63
-        byte = ac_table.decode_from_io(bit_reader)
-
-        break if byte == 0x00
-
-        if byte == 0xF0
-          i += 16
-          next
-        end
-
-        zero_run = (byte & 0xF0) >> 4
-        magnitude = byte & 0x0F
-
-        i += zero_run
-
-        adds = bit_reader.read_bits(magnitude.to_i)
-        ac = extend_coefficient(adds, magnitude)
-
-        ac_values[i] = ac
-        i += 1
-      end
-      ac_values
-    end
-
-    def decode_progressive
-    end
-
-    def decode_dc_first
-    end
-
-    def decode_dc_successive
-    end
-
-    def decode_ac_first
-    end
-
-    def decode_ac_successive
-    end
-
-    private def extend_coefficient(bits, magnitude)
-      vt = 1 << (magnitude - 1)
-      diff = bits
-      diff = bits + 1 + (-1 << magnitude) if bits < vt
-      diff
     end
 
     def restart?(decoded_mcus, restart_count, reader)
@@ -255,7 +177,6 @@ module StumpyJPEG
       @image_width = sof.width
       sof.components.each do |component|
         @components[component.component_id] = component
-        @last_dc_values[component.component_id] = 0
       end
       @max_h = @components.max_of { |key, comp| comp.h }
       @max_v = @components.max_of { |key, comp| comp.v }
