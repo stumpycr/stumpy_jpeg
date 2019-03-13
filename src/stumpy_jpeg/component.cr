@@ -10,12 +10,16 @@ module StumpyJPEG
     getter dqt_table_id : Int32
 
     getter last_dc_value : Int32
+    getter end_of_band_run : Int32
 
+    getter coefficients : Hash(Tuple(Int32, Int32), Array(Int32))
     getter data_units : Hash(Tuple(Int32, Int32), Matrix(Int32))
     getter upsampled_data : Hash(Tuple(Int32, Int32), Matrix(Int32))
 
     def initialize(@component_id, @h, @v, @dqt_table_id)
       @last_dc_value = 0
+      @end_of_band_run = 0
+      @coefficients = {} of Tuple(Int32, Int32) => Array(Int32)
       @data_units = {} of Tuple(Int32, Int32) => Matrix(Int32)
       @upsampled_data = {} of Tuple(Int32, Int32) => Matrix(Int32)
     end
@@ -33,11 +37,11 @@ module StumpyJPEG
       end
     end
 
-    def decode_sequential(bit_reader, dc_table, ac_table, dqt)
+    def decode_sequential(bit_reader, dc_table, ac_table, dqt, du_row, du_col)
       coef = Array.new(64, 0)
       decode_sequential_dc(bit_reader, dc_table, coef)
       decode_sequential_ac(bit_reader, ac_table, coef)
-      Transformation.fast_inverse_transform(coef, dqt)
+      data_units[{du_col, du_row}] = Transformation.fast_inverse_transform(coef, dqt)
     end
 
     def decode_sequential_dc(bit_reader, dc_table, coef)
@@ -66,6 +70,131 @@ module StumpyJPEG
         i += 1
       end
     end
+
+    def decode_progressive_dc_first(bit_reader, dc_table, approx, du_row, du_col)
+      coef = coefficients[{du_col, du_row}]? || Array.new(64, 0)
+      magnitude = dc_table.decode_from_io(bit_reader)
+      @last_dc_value += read_n_extend(bit_reader, magnitude)
+      coef[ZIGZAG[0]] = @last_dc_value << approx
+      coefficients[{du_col, du_row}] = coef
+    end
+
+    def decode_progressive_dc_refine(bit_reader, approx, du_row, du_col)
+      coef = coefficients[{du_col, du_row}]
+      bit = bit_reader.read_bits(1)
+      coef[ZIGZAG[0]] = coef[ZIGZAG[0]] | (bit << approx)
+    end
+
+    def decode_progressive_ac_first(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
+      coef = coefficients[{du_col, du_row}]
+
+      if @end_of_band_run > 0
+        @end_of_band_run -= 1
+        return
+      end
+
+      i = s_start
+      while i <= s_end
+        byte = ac_table.decode_from_io(bit_reader)
+        
+        hi = byte >> 4
+        lo = byte & 0x0F
+
+        if lo == 0
+          if hi == 0xF
+            i += 16
+          else
+            @end_of_band_run = (1 << hi) - 1
+            @end_of_band_run += bit_reader.read_bits(hi) if hi > 0
+            break
+          end
+        else
+          i += hi
+
+          break if i > s_end
+
+          coef[ZIGZAG[i]] = read_n_extend(bit_reader, lo) << approx
+          i += 1
+        end
+      end
+      if s_end == 63
+        data_units[{du_col, du_row}] = Transformation.fast_inverse_transform(coef, dqt)
+      end
+    end
+
+    def decode_progressive_ac_refine(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
+      coef = coefficients[{du_col, du_row}]
+      
+      if @end_of_band_run > 0
+        refine_ac_non_zeroes(bit_reader, coef, s_start, s_end, 64, approx)
+        @end_of_band_run -= 1
+        return
+      end
+      
+      i = s_start
+      while i <= s_end
+        byte = ac_table.decode_from_io(bit_reader)
+
+        hi = byte >> 4
+        lo = byte & 0x0F
+
+        zero_run = hi
+        new_val = 0
+        
+        case lo
+        when 0
+          if hi == 0x0F
+          else
+            @end_of_band_run = (1 << hi) - 1
+            @end_of_band_run += bit_reader.read_bits(hi) if hi > 0
+            zero_run = 64
+          end
+        when 1
+          if bit_reader.read_bits(1) != 0
+            new_val = (1 << approx)
+          else
+            new_val = (-1 << approx)
+          end
+        else
+          raise "Invalid huffman encoded value for ac scan"
+        end
+
+        i = refine_ac_non_zeroes(bit_reader, coef, i, s_end, zero_run, approx)
+        coef[ZIGZAG[i]] = new_val if new_val != 0
+        i += 1
+      end
+      if s_end == 63
+        data_units[{du_col, du_row}] = Transformation.fast_inverse_transform(coef, dqt)
+      end
+    end
+    
+    private def refine_ac_non_zeroes(bit_reader, coef, start, stop, zero_run, approx)
+      (start...stop).each do |i|
+        pos = ZIGZAG[i]
+        if coef[pos] != 0
+          refine_ac_value(bit_reader, coef, pos, approx)
+        else
+          return i if zero_run == 0
+          zero_run -= 1
+        end
+      end
+      return stop
+    end
+
+    private def refine_ac_value(bit_reader, coef, pos, approx)
+      case
+      when coef[pos] > 0
+        bit = bit_reader.read_bits(1)
+        if bit != 0
+          coef[pos] += (1 << approx)
+        end
+      when coef[pos] < 0
+        bit = bit_reader.read_bits(1)
+        if bit != 0
+          coef[pos] += (-1 << approx)
+        end
+      end
+    end
     
     private def read_n_extend(bit_reader, magnitude)
       adds = bit_reader.read_bits(magnitude)
@@ -80,6 +209,10 @@ module StumpyJPEG
 
     def reset_last_dc_value
       @last_dc_value = 0
+    end
+
+    def reset_end_of_band
+      @end_of_band_run = 0
     end
 
     def to_s(io : IO)

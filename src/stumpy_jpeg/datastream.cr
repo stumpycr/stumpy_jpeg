@@ -26,7 +26,7 @@ module StumpyJPEG
     private def read_marker_start
       start = @io.read_byte
       raise IO::EOFError.new if !start
-      raise "Expected a marker but got #{start}" if start != Markers::START
+      raise "Expected a marker but got #{start} at #{@io.pos}" if start != Markers::START
     end
 
     private def read_marker_byte
