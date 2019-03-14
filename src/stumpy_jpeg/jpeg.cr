@@ -43,7 +43,7 @@ module StumpyJPEG
         Matrix.new(image_height, image_width) do |l, r, c|
           du_x, sample_x = c.divmod(8)
           du_y, sample_y = r.divmod(8)
-          du = component.data_units[{du_x, du_y}]
+          du = component.upsampled_data[{du_x, du_y}]
           du[sample_y, sample_x]
         end
       end
