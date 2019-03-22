@@ -42,6 +42,7 @@ module StumpyJPEG
 
     def update_canvas
       component_matrices = components.map do |id, component|
+        component.idct_transform(quantization_tables[component.dqt_table_id])
         component.upsample(max_h, max_v)
         Matrix.new(image_height, image_width) do |l, r, c|
           du_x, sample_x = c.divmod(8)

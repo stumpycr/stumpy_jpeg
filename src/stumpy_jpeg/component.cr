@@ -24,8 +24,14 @@ module StumpyJPEG
       @upsampled_data = {} of Tuple(Int32, Int32) => Matrix(Int32)
     end
 
+    def idct_transform(dqt)
+      coefficients.each do |coords, coef|
+        data_units[coords] = Transformation.fast_inverse_transform(coef, dqt)
+      end
+    end
+
     def upsample(max_h, max_v)
-      keys = data_units.each do |coords, du|
+      data_units.each do |coords, du|
         du_x, du_y = coords
 
         (0...max_v).each do |y|
@@ -41,7 +47,7 @@ module StumpyJPEG
       coef = Array.new(64, 0)
       decode_sequential_dc(bit_reader, dc_table, coef)
       decode_sequential_ac(bit_reader, ac_table, coef)
-      data_units[{du_col, du_row}] = Transformation.fast_inverse_transform(coef, dqt)
+      coefficients[{du_col, du_row}] = coef
     end
 
     def decode_sequential_dc(bit_reader, dc_table, coef)
@@ -117,9 +123,6 @@ module StumpyJPEG
           i += 1
         end
       end
-      if s_end == 63
-        data_units[{du_col, du_row}] = Transformation.fast_inverse_transform(coef, dqt)
-      end
     end
 
     def decode_progressive_ac_refine(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
@@ -162,9 +165,6 @@ module StumpyJPEG
         i = refine_ac_non_zeroes(bit_reader, coef, i, s_end, zero_run, approx)
         coef[ZIGZAG[i]] = new_val if new_val != 0
         i += 1
-      end
-      if s_end == 63
-        data_units[{du_col, du_row}] = Transformation.fast_inverse_transform(coef, dqt)
       end
     end
     
