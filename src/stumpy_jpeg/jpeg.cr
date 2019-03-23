@@ -38,9 +38,12 @@ module StumpyJPEG
       @image_height = 0
       @max_h = 1
       @max_v = 1
+      @canvas_outdated = false
     end
 
     def update_canvas
+      return false if !@canvas_outdated
+
       component_matrices = components.map do |id, component|
         component.idct_transform(quantization_tables[component.dqt_table_id])
         component.upsample(max_h, max_v)
@@ -60,8 +63,11 @@ module StumpyJPEG
         r =  1.402   * (cr - 128) + y;
         g = -0.34414 * (cb - 128) + y - 0.71414 * (cr - 128);
         b =  1.772   * (cb - 128) + y;
-        RGBA.from_rgb8(r.round.clamp(0, 255).to_i, g.clamp(0, 255).round.to_i, b.clamp(0, 255).round.to_i)  
+        RGBA.from_rgb8(r.clamp(0, 255).round.to_i, g.clamp(0, 255).round.to_i, b.clamp(0, 255).round.to_i)
       end
+
+      @canvas_outdated = false
+      return true
     end
 
     private def parse_dqt(io)
@@ -127,6 +133,7 @@ module StumpyJPEG
       else
         parse_sequential_scan(sos, io, mcu_x, mcu_y)
       end
+      @canvas_outdated = true
     end
 
     private def parse_progressive_scan(sos, io, mcu_x, mcu_y)

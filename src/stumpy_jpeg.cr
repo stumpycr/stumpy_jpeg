@@ -32,8 +32,9 @@ module StumpyJPEG
     jpeg = JPEG.new
     Datastream.new(io).read do |marker, io|
       jpeg.parse_segment(marker, io)
-      jpeg.update_canvas
-      yield jpeg.canvas
+      if jpeg.update_canvas
+        yield jpeg.canvas
+      end
     end
     jpeg.canvas
   end
