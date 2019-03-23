@@ -118,6 +118,8 @@ module StumpyJPEG
       end
       @max_h = @components.max_of { |key, comp| comp.h }
       @max_v = @components.max_of { |key, comp| comp.v }
+
+      raise "Downsampled JPEGs are not supported yet" if @max_h != 1 || @max_v != 1
     end
 
     private def parse_sos(io)
