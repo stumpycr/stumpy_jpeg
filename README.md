@@ -1,6 +1,11 @@
 # stumpy_jpeg
 
-TODO: Write a description here
+WORK IN PROGRESS
+
+Read sequential and progressive JPEGs.
+
+* Does not support downsampled JPEGs correctly yet. Images end up garbled.
+* Does not support arithmetic encoding.
 
 ## Installation
 
@@ -12,17 +17,37 @@ dependencies:
 ```
 2. Run `shards install`
 
+## Interface
+
+* `StumpyJPEG.read(file : String) : Canvas` reads a JPEG image from a file
+* `StumpyJPEG.read(io : IO) : Canvas` reads a JPEG image from an IO
+* `StumpyJPEG::JPEG` holds image associated data during parsing
+
 ## Usage
 
 ```crystal
 require "stumpy_jpeg"
+
+canvas = StumpyJPEG.read("yamboli.jpg")
 ```
 
-TODO: Write usage instructions here
+For progressive reading
 
-## Development
+```crystal
+require "stumpy_jpeg"
 
-TODO: Write development instructions here
+StumpyJPEG.read("yamboli.jpg") do |canvas|
+  r, g, b = canvas[0, 0].to_rgb8
+  puts "red=#{r}, green=#{g}, blue=#{b}"
+end
+```
+
+## To Do
+
+- [ ] JFIF header parsing support
+- [ ] Upsampling support
+- [ ] Arithmetic encoding support
+- [ ] Add more tests
 
 ## Contributing
 
