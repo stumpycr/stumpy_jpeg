@@ -31,13 +31,22 @@ module StumpyJPEG
     end
 
     def upsample(max_h, max_v)
+      h_sampling = max_h / h
+      v_sampling = max_v / v
+
+      h_size = 8 / h_sampling
+      v_size = 8 / v_sampling
+      
       data_units.each do |coords, du|
         du_x, du_y = coords
 
-        (0...max_v).each do |y|
-          (0...max_h).each do |x|
+        (0...v_sampling).each do |y|
+          (0...h_sampling).each do |x|
+            new_du = Matrix.new(8, 8) do |l, r, c|
+              du[r / h_sampling + h_size * x, c / v_sampling + v_size * y]
+            end
             dupe_coords = {du_x + x, du_y + y}
-            upsampled_data[dupe_coords] = du
+            upsampled_data[dupe_coords] = new_du
           end
         end
       end
