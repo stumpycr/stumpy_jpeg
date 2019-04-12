@@ -4,7 +4,6 @@ WORK IN PROGRESS
 
 Read sequential and progressive JPEGs.
 
-* Does not support downsampled JPEGs correctly yet. Images end up garbled.
 * Does not support arithmetic encoding.
 
 ## Installation
@@ -42,10 +41,10 @@ StumpyJPEG.read("yamboli.jpg") do |canvas|
 end
 ```
 
-## To Do
+## To Do / Wishlist
 
 - [ ] JFIF header parsing support
-- [ ] Upsampling support
+- [x] Downsampled image support
 - [ ] Arithmetic encoding support
 - [ ] Add more tests
 
