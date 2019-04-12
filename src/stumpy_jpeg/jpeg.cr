@@ -176,9 +176,9 @@ module StumpyJPEG
             dc_table = entropy_dc_tables[s.dc_table_id]
 
             (0...component.v).each do |c_y|
-              du_row = m_y*max_v + c_y
+              du_row = m_y*component.v + c_y
               (0...component.h).each do |c_x|
-                du_col = m_x*max_h + c_x
+                du_col = m_x*component.h + c_x
                 if first_scan
                   component.decode_progressive_dc_first(reader, dc_table, sa_low, du_row, du_col)
                 else
@@ -221,16 +221,12 @@ module StumpyJPEG
             dqt = quantization_tables[component.dqt_table_id]
             ac_table = entropy_ac_tables[s.ac_table_id]
 
-            (0...component.v).each do |c_y|
-              du_row = m_y*max_v + c_y
-              (0...component.h).each do |c_x|
-                du_col = m_x*max_h + c_x
-                if first_scan
-                  component.decode_progressive_ac_first(reader, ac_table, dqt, s_start, s_end, sa_low, du_row, du_col)
-                else
-                  component.decode_progressive_ac_refine(reader, ac_table, dqt, s_start, s_end, sa_low, du_row, du_col)
-                end
-              end
+            du_row = m_y
+            du_col = m_x
+            if first_scan
+              component.decode_progressive_ac_first(reader, ac_table, dqt, s_start, s_end, sa_low, du_row, du_col)
+            else
+              component.decode_progressive_ac_refine(reader, ac_table, dqt, s_start, s_end, sa_low, du_row, du_col)
             end
           end
 
@@ -262,9 +258,9 @@ module StumpyJPEG
             ac_table = entropy_ac_tables[s.ac_table_id]
 
             (0...component.v).each do |c_y|
-              du_row = m_y*max_v + c_y
+              du_row = m_y*component.v + c_y
               (0...component.h).each do |c_x|
-                du_col = m_x*max_h + c_x
+                du_col = m_x*component.h + c_x
                 component.decode_sequential(reader, dc_table, ac_table, dqt, du_row, du_col)
               end
             end
