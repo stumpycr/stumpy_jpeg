@@ -53,7 +53,7 @@ module StumpyJPEG
               new_coords = {new_du_x + x, new_du_y + y}
 
               new_du = Matrix.new(8, 8) do |l, r, c|
-                du[c / h_sampling + h_size * x, r / v_sampling + v_size * y]
+                du[r / v_sampling + v_size * y, c / h_sampling + h_size * x]
               end
 
               upsampled_data[new_coords] = new_du
@@ -98,9 +98,6 @@ module StumpyJPEG
     end
 
     def decode_progressive_dc_first(bit_reader, dc_table, approx, du_row, du_col)
-      puts "ACFirstScan"
-      puts "0 -> 1"
-
       coef = coefficients[{du_col, du_row}]? || Array.new(64, 0)
       magnitude = dc_table.decode_from_io(bit_reader)
       @last_dc_value += read_n_extend(bit_reader, magnitude)
@@ -117,10 +114,6 @@ module StumpyJPEG
     def decode_progressive_ac_first(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
       coef = coefficients[{du_col, du_row}]
 
-      s_sssss = s_end + 1
-      puts "ACFirstScan"
-      puts "#{s_start} -> #{s_sssss}"
-
       if @end_of_band_run > 0
         @end_of_band_run -= 1
         return
@@ -132,8 +125,6 @@ module StumpyJPEG
         
         hi = byte >> 4
         lo = byte & 0x0F
-
-        puts "Hi: #{hi}, Lo: #{lo}, i: #{i}"
 
         if lo == 0
           if hi == 0xF
@@ -156,10 +147,6 @@ module StumpyJPEG
 
     def decode_progressive_ac_refine(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
       coef = coefficients[{du_col, du_row}]
-      
-      s_sssss = s_end + 1
-      puts "ACRefineScan"
-      puts "#{s_start} -> #{s_sssss}"
 
       if @end_of_band_run > 0
         refine_ac_non_zeroes(bit_reader, coef, s_start, s_end, 64, approx)
@@ -173,8 +160,6 @@ module StumpyJPEG
 
         hi = byte >> 4
         lo = byte & 0x0F
-
-        puts "Hi: #{hi}, Lo: #{lo}, i: #{i}"
 
         zero_run = hi
         new_val = 0
