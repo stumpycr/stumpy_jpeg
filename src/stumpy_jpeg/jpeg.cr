@@ -289,15 +289,15 @@ module StumpyJPEG
         selector = sos.selectors.first
         component = components[selector.component_id]
   
-        pixels_x = 8 * max_h / component.h
-        pixels_y = 8 * max_v / component.v
+        pixels_x = 8 * max_h // component.h
+        pixels_y = 8 * max_v // component.v
   
-        mcu_x = (image_width + pixels_x - 1) / pixels_x
-        mcu_y = (image_height + pixels_y - 1) / pixels_y
+        mcu_x = (image_width + pixels_x - 1) // pixels_x
+        mcu_y = (image_height + pixels_y - 1) // pixels_y
         {mcu_x, mcu_y}
       else
-        mcu_x = (image_width + 8 * max_h - 1) / (8 * max_h)
-        mcu_y = (image_height + 8 * max_v - 1) / (8 * max_v)
+        mcu_x = (image_width + 8 * max_h - 1) // (8 * max_h)
+        mcu_y = (image_height + 8 * max_v - 1) // (8 * max_v)
         {mcu_x, mcu_y}
       end
     end
