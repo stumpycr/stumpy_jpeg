@@ -63,7 +63,7 @@ module StumpyJPEG
       end
     end
 
-    def decode_sequential(bit_reader, dc_table, ac_table, dqt, du_row, du_col)
+    def decode_sequential(bit_reader, dc_table, ac_table, du_row, du_col)
       coef = Array.new(64, 0)
       decode_sequential_dc(bit_reader, dc_table, coef)
       decode_sequential_ac(bit_reader, ac_table, coef)
@@ -111,7 +111,7 @@ module StumpyJPEG
       coef[ZIGZAG[0]] = coef[ZIGZAG[0]] | (bit << approx)
     end
 
-    def decode_progressive_ac_first(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
+    def decode_progressive_ac_first(bit_reader, ac_table, s_start, s_end, approx, du_row, du_col)
       coef = coefficients[{du_col, du_row}]
 
       if @end_of_band_run > 0
@@ -145,7 +145,7 @@ module StumpyJPEG
       end
     end
 
-    def decode_progressive_ac_refine(bit_reader, ac_table, dqt, s_start, s_end, approx, du_row, du_col)
+    def decode_progressive_ac_refine(bit_reader, ac_table, s_start, s_end, approx, du_row, du_col)
       coef = coefficients[{du_col, du_row}]
 
       if @end_of_band_run > 0

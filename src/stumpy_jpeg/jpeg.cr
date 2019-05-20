@@ -159,8 +159,8 @@ module StumpyJPEG
 
       reader = BitReader.new(io)
 
-      mcu_y.times do |m_y|
-        mcu_x.times do |m_x|
+      mcu_y.times do |mcu_row|
+        mcu_x.times do |mcu_col|
 
           if restart_interval > 0 && decoded_mcus == restart_interval
             restart(reader, restart_count)
@@ -173,9 +173,9 @@ module StumpyJPEG
             dc_table = entropy_dc_tables[s.dc_table_id]
 
             (0...component.v).each do |c_y|
-              du_row = m_y*component.v + c_y
+              du_row = mcu_row * component.v + c_y
               (0...component.h).each do |c_x|
-                du_col = m_x*component.h + c_x
+                du_col = mcu_col * component.h + c_x
                 if first_scan
                   component.decode_progressive_dc_first(reader, dc_table, sa_low, du_row, du_col)
                 else
@@ -200,8 +200,8 @@ module StumpyJPEG
 
       reader = BitReader.new(io)
 
-      mcu_y.times do |m_y|
-        mcu_x.times do |m_x|
+      mcu_y.times do |mcu_row|
+        mcu_x.times do |mcu_col|
 
           if restart_interval > 0 && decoded_mcus == restart_interval
             restart(reader, restart_count)
@@ -212,15 +212,12 @@ module StumpyJPEG
           sos.selectors.each do |s|
             component = components[s.component_id]
             
-            dqt = quantization_tables[component.dqt_table_id]
             ac_table = entropy_ac_tables[s.ac_table_id]
 
-            du_row = m_y
-            du_col = m_x
             if first_scan
-              component.decode_progressive_ac_first(reader, ac_table, dqt, s_start, s_end, sa_low, du_row, du_col)
+              component.decode_progressive_ac_first(reader, ac_table, s_start, s_end, sa_low, mcu_row, mcu_col)
             else
-              component.decode_progressive_ac_refine(reader, ac_table, dqt, s_start, s_end, sa_low, du_row, du_col)
+              component.decode_progressive_ac_refine(reader, ac_table, s_start, s_end, sa_low, mcu_row, mcu_col)
             end
           end
 
@@ -235,8 +232,8 @@ module StumpyJPEG
 
       reader = BitReader.new(io)
 
-      mcu_y.times do |m_y|
-        mcu_x.times do |m_x|
+      mcu_y.times do |mcu_row|
+        mcu_x.times do |mcu_col|
 
           if restart_interval > 0 && decoded_mcus == restart_interval
             restart(reader, restart_count)
@@ -247,15 +244,14 @@ module StumpyJPEG
           sos.selectors.each do |s|
             component = components[s.component_id]
 
-            dqt = quantization_tables[component.dqt_table_id]
             dc_table = entropy_dc_tables[s.dc_table_id]
             ac_table = entropy_ac_tables[s.ac_table_id]
 
             (0...component.v).each do |c_y|
-              du_row = m_y*component.v + c_y
+              du_row = mcu_row * component.v + c_y
               (0...component.h).each do |c_x|
-                du_col = m_x*component.h + c_x
-                component.decode_sequential(reader, dc_table, ac_table, dqt, du_row, du_col)
+                du_col = mcu_col * component.h + c_x
+                component.decode_sequential(reader, dc_table, ac_table, du_row, du_col)
               end
             end
           end
