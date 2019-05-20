@@ -1,12 +1,10 @@
 module StumpyJPEG
   class Datastream
     def initialize(@io : IO)
-      @buffer_marker = nil.as(UInt8?)
     end
 
     def read
-      raise "Not a JPEG file" if @io.read_byte != Markers::START || @io.read_byte != Markers::SOI
-
+      read_start_of_image
       while marker = read_marker
         break if marker == Markers::EOI
         yield marker, @io
@@ -14,13 +12,8 @@ module StumpyJPEG
     end
 
     def read_marker
-      if marker = @buffer_marker
-        @buffer_marker = nil
-        marker
-      else
-        read_marker_start
-        read_marker_byte  
-      end
+      read_marker_start
+      read_marker_byte  
     end
 
     private def read_marker_start
@@ -35,5 +28,8 @@ module StumpyJPEG
       byte
     end
 
+    private def read_start_of_image
+      raise "Not a JPEG file" if @io.read_byte != Markers::START || @io.read_byte != Markers::SOI
+    end
   end
 end
