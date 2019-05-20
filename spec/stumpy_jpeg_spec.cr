@@ -58,4 +58,8 @@ describe StumpyJPEG do
   it "decodes large images" do
     canvas = StumpyJPEG.read("spec/images/stones.jpeg")
   end
+    
+  it "decodes images with restart markers" do
+    canvas = StumpyJPEG.read("spec/images/alpaca.jpg")
+  end
 end
