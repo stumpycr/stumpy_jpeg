@@ -172,9 +172,9 @@ module StumpyJPEG
             component = components[s.component_id]
             dc_table = entropy_dc_tables[s.dc_table_id]
 
-            (0...component.v).each do |c_y|
+            component.v.times do |c_y|
               du_row = mcu_row * component.v + c_y
-              (0...component.h).each do |c_x|
+              component.h.times do |c_x|
                 du_col = mcu_col * component.h + c_x
                 if first_scan
                   component.decode_progressive_dc_first(reader, dc_table, sa_low, du_row, du_col)
@@ -211,7 +211,6 @@ module StumpyJPEG
 
           sos.selectors.each do |s|
             component = components[s.component_id]
-            
             ac_table = entropy_ac_tables[s.ac_table_id]
 
             if first_scan
@@ -243,13 +242,12 @@ module StumpyJPEG
 
           sos.selectors.each do |s|
             component = components[s.component_id]
-
             dc_table = entropy_dc_tables[s.dc_table_id]
             ac_table = entropy_ac_tables[s.ac_table_id]
 
-            (0...component.v).each do |c_y|
+            component.v.times do |c_y|
               du_row = mcu_row * component.v + c_y
-              (0...component.h).each do |c_x|
+              component.h.times do |c_x|
                 du_col = mcu_col * component.h + c_x
                 component.decode_sequential(reader, dc_table, ac_table, du_row, du_col)
               end
