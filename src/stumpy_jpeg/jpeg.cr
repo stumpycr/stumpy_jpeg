@@ -162,11 +162,8 @@ module StumpyJPEG
       mcu_y.times do |m_y|
         mcu_x.times do |m_x|
 
-          if restart?(decoded_mcus, restart_count, reader)
-            components.each do |id, c| 
-              c.reset_last_dc_value
-              c.reset_end_of_band
-            end
+          if restart_interval > 0 && decoded_mcus == restart_interval
+            restart(reader, restart_count)
             restart_count += 1
             decoded_mcus = 0
           end
@@ -206,11 +203,8 @@ module StumpyJPEG
       mcu_y.times do |m_y|
         mcu_x.times do |m_x|
 
-          if restart?(decoded_mcus, restart_count, reader)
-            components.each do |id, c| 
-              c.reset_last_dc_value
-              c.reset_end_of_band
-            end
+          if restart_interval > 0 && decoded_mcus == restart_interval
+            restart(reader, restart_count)
             restart_count += 1
             decoded_mcus = 0
           end
@@ -244,8 +238,8 @@ module StumpyJPEG
       mcu_y.times do |m_y|
         mcu_x.times do |m_x|
 
-          if restart?(decoded_mcus, restart_count, reader)
-            components.each {|id, c| c.reset_last_dc_value }
+          if restart_interval > 0 && decoded_mcus == restart_interval
+            restart(reader, restart_count)
             restart_count += 1
             decoded_mcus = 0
           end
@@ -271,16 +265,13 @@ module StumpyJPEG
       end
     end
 
-    private def restart?(decoded_mcus, restart_count, reader)
-      return false if restart_interval == 0
-
-      if decoded_mcus == restart_interval
-        marker = reader.read_restart_marker
-        expected_marker = Markers::RST + restart_count
-        raise "Expected correct restart marker" if expected_marker != marker
-        return true
-      else
-        return false
+    private def restart(reader, restart_count)
+      marker = reader.read_restart_marker
+      expected_marker = Markers::RST + restart_count
+      raise "Expected correct restart marker" if expected_marker != marker
+      components.each do |id, c|
+        c.reset_last_dc_value
+        c.reset_end_of_band
       end
     end
 
