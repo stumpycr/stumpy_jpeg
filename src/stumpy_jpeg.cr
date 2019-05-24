@@ -1,5 +1,5 @@
 require "stumpy_core"
-require "./stumpy_jpeg/*"
+require "./stumpy_jpeg/**"
 
 # TODO: Write documentation for `StumpyJPEG`
 module StumpyJPEG
