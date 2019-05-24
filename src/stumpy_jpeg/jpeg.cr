@@ -59,17 +59,8 @@ module StumpyJPEG
         end
       end
 
-      @canvas = Canvas.new(image_width, image_height) do |w, h|
-        y  = component_matrices[0]?.try { |m| (m[h, w] + 128).clamp(0, 255) } || 0
-        cb = component_matrices[1]?.try { |m| (m[h, w] + 128).clamp(0, 255) } || 128
-        cr = component_matrices[2]?.try { |m| (m[h, w] + 128).clamp(0, 255) } || 128
-        
-        r =  1.402   * (cr - 128) + y;
-        g = -0.34414 * (cb - 128) + y - 0.71414 * (cr - 128);
-        b =  1.772   * (cb - 128) + y;
-        RGBA.from_rgb8(r.clamp(0, 255).round.to_i, g.clamp(0, 255).round.to_i, b.clamp(0, 255).round.to_i)
-      end
-
+      color_model = ColorModel.from_number_of_components(number_of_components)
+      @canvas = color_model.compose_canvas(component_matrices)
       @canvas_outdated = false
       return true
     end
