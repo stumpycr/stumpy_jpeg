@@ -11,11 +11,10 @@ module StumpyJPEG
     abstract def decompose_canvas(canvas : Canvas)
 
     # Returns a ColorModel corresponding to n components
-    def self.from_number_of_components(n, transform_flag = 1)
+    def self.from_number_of_components(n)
       case n
       when 1 then Grayscale
-      when 3 then (transform_flag == 1) ? YCbCr : RGB
-      when 4 then (transform_flag == 2) ? YCCK : CMYK
+      when 3 then YCbCr
       else
         raise "Unsupported ColorModel defined"
       end
