@@ -21,7 +21,7 @@ module StumpyJPEG
 
     getter max_h
     getter max_v
-    
+
     def initialize
       @canvas = Canvas.new(0,0)
       @comment = ""
@@ -30,7 +30,7 @@ module StumpyJPEG
       @entropy_dc_tables = uninitialized Huffman::Table[4]
       @entropy_ac_tables = uninitialized Huffman::Table[4]
       @quantization_tables = uninitialized Quantization::Table[4]
-      @app = nil.as(APP?)
+      @app = nil.as(Segment::APP?)
       @number_of_components = 0
       @progressive = false
       @bit_precision = -1
@@ -66,14 +66,14 @@ module StumpyJPEG
     end
 
     private def parse_dqt(io)
-      dqt = DQT.from_io(io)
+      dqt = Segment::DQT.from_io(io)
       dqt.tables.each do |table|
         @quantization_tables[table.table_id] = table
       end
     end
 
     private def parse_dht(io)
-      dht = DHT.from_io(io)
+      dht = Segment::DHT.from_io(io)
       dht.tables.each do |table|
         @entropy_dc_tables[table.table_id] = table if table.table_class == 0
         @entropy_ac_tables[table.table_id] = table if table.table_class == 1
@@ -85,17 +85,17 @@ module StumpyJPEG
     end
 
     private def parse_dri(io)
-      dri = DRI.from_io(io)
+      dri = Segment::DRI.from_io(io)
       @restart_interval = dri.interval
     end
 
     private def parse_com(io)
-      comment = COM.from_io(io)
+      comment = Segment::COM.from_io(io)
       @comment = comment.text
     end
 
     private def parse_app(marker, io)
-      app = APP.from_io(io)
+      app = Segment::APP.from_io(io)
       @app = app
     end
 
@@ -103,7 +103,7 @@ module StumpyJPEG
       raise "Unsupported decoding mode" if !SUPPORTED_MODES.includes?(marker)
       @progressive = PROGRESSIVE_MODES.includes?(marker)
 
-      sof = SOF.from_io(io)
+      sof = Segment::SOF.from_io(io)
       @number_of_components = sof.number_of_components
       @bit_precision = sof.bit_precision
       @image_height = sof.height
@@ -116,7 +116,7 @@ module StumpyJPEG
     end
 
     private def parse_sos(io)
-      sos = SOS.from_io(io)
+      sos = Segment::SOS.from_io(io)
       parse_scan(sos, io)
     end
 
@@ -268,10 +268,10 @@ module StumpyJPEG
       if sos.number_of_components == 1
         selector = sos.selectors.first
         component = components[selector.component_id]
-  
+
         pixels_x = 8 * max_h // component.h
         pixels_y = 8 * max_v // component.v
-  
+
         mcu_x = (image_width + pixels_x - 1) // pixels_x
         mcu_y = (image_height + pixels_y - 1) // pixels_y
         {mcu_x, mcu_y}
