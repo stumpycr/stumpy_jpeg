@@ -12,11 +12,11 @@ module StumpyJPEG
       end
     end
 
-    def to_s(io : IO)
-      super io
-      io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      super(io, format)
+      format.encode(length.to_u16, io)
       tables.each do |table|
-        # TODO
+        io.write_bytes(table, format)
       end
     end
 
@@ -31,7 +31,7 @@ module StumpyJPEG
         tables << dht
       end
 
-      DHT.new(tables)
+      self.new(tables)
     end
   end
 end

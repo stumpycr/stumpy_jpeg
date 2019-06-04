@@ -7,7 +7,7 @@ module StumpyJPEG
     end
 
     def self.decompose_canvas(canvas : Canvas)
-      matrices = [] of Matrix
+      matrices = [] of Matrix(Int32)
       matrices << Matrix.new(canvas.height, canvas.width, 0)
       matrices << Matrix.new(canvas.height, canvas.width, 0)
       matrices << Matrix.new(canvas.height, canvas.width, 0)

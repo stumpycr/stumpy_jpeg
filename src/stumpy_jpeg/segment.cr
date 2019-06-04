@@ -11,9 +11,10 @@ module StumpyJPEG
     def initialize(@marker)
     end
 
-    def to_s(io : IO)
-      io.write_byte(Markers::START)
-      io.write_byte(marker)
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      raise "ByteFormat must be BigEndian" if format != IO::ByteFormat::BigEndian
+      format.encode(Markers::START, io)
+      format.encode(marker, io)
     end
 
     class SOI < Segment

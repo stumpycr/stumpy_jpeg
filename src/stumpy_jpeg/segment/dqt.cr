@@ -12,10 +12,12 @@ module StumpyJPEG
       end
     end
 
-    def to_s(io : IO)
-      super io
-      io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
-      # TODO: Write tables
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      super(io, format)
+      format.encode(length.to_u16, io)
+      tables.each do |table|
+        io.write_bytes(table, format)
+      end
     end
 
     def self.from_io(io : IO)

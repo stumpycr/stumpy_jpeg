@@ -3,10 +3,12 @@ module StumpyJPEG
     class Table
       getter table_class : Int32
       getter table_id : Int32
+      getter bits : Array(Int32)
+      getter huffval : Array(Int32)
       @encoding_map : Hash(UInt8, Tuple(Int32, Int32))
       @decoding_map : Hash(Tuple(Int32, Int32), UInt8)
 
-      def initialize(@table_class, @table_id, bits, huffval)
+      def initialize(@table_class, @table_id, @bits, @huffval)
         huffsize = generate_size_table(bits)
         huffcode = generate_code_table(huffsize)
         map = order_codes(huffsize, huffcode, huffval)
@@ -42,8 +44,15 @@ module StumpyJPEG
         17 + @encoding_map.size
       end
 
-      # TODO: Write
-      def to_s(io : IO)
+      def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+        raise "ByteFormat must be BigEndian" if format != IO::ByteFormat::BigEndian
+        format.encode(((table_class << 4) | table_id).to_u8, io)
+        bits.each do |bit|
+          format.encode(bit.to_u8, io)
+        end
+        huffval.each do |huff|
+          format.encode(huff.to_u8, io)
+        end
       end
 
       def self.from_io(io)
@@ -100,10 +109,12 @@ module StumpyJPEG
         huffcode
       end
 
-      private def order_codes(huffsize, huffcode, huffval)
-        map = {} of UInt8 => Tuple(Int32, Int32)
-        huffval.each_with_index do |v, i|
-          map[v.to_u8] = {huffcode[i], huffsize[i]}
+      private def order_codes(huffsize, huffcode, huffvals)
+        map = Hash(UInt8, Tuple(Int32, Int32)).new(huffvals.size) { raise IndexError.new }
+        huffvals.each_with_index do |v, i|
+          c = huffcode[i]
+          s = huffsize[i]
+          map[v.to_u8] = {c, s}
         end
         map
       end

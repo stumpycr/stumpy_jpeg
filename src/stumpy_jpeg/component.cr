@@ -13,54 +13,11 @@ module StumpyJPEG
     getter end_of_band_run : Int32
 
     getter coefficients : Hash(Tuple(Int32, Int32), Array(Int32))
-    getter data_units : Hash(Tuple(Int32, Int32), Matrix(Int32))
-    getter upsampled_data : Hash(Tuple(Int32, Int32), Matrix(Int32))
 
     def initialize(@component_id, @h, @v, @dqt_table_id)
       @last_dc_value = 0
       @end_of_band_run = 0
       @coefficients = {} of Tuple(Int32, Int32) => Array(Int32)
-      @data_units = {} of Tuple(Int32, Int32) => Matrix(Int32)
-      @upsampled_data = {} of Tuple(Int32, Int32) => Matrix(Int32)
-    end
-
-    def idct_transform(dqt)
-      coefficients.each do |coords, coef|
-        data_units[coords] = Transformation.fast_inverse_transform(coef, dqt)
-      end
-    end
-
-    def upsample_one_to_one
-      data_units.each do |coords, du|
-        upsampled_data[coords] = du
-      end    
-    end
-
-    def upsample(max_h, max_v)
-      h_sampling = max_h // h
-      v_sampling = max_v // v
-
-      h_size = 8 // h_sampling
-      v_size = 8 // v_sampling
-      
-      data_units.each do |coords, du|
-        du_x, du_y = coords
-
-        new_du_x = du_x * h_sampling
-        new_du_y = du_y * v_sampling
-        
-        v_sampling.times do |y|
-          h_sampling.times do |x|
-            new_coords = {new_du_x + x, new_du_y + y}
-
-            new_du = Matrix.new(8, 8) do |l, r, c|
-              du[r // v_sampling + v_size * y, c // h_sampling + h_size * x]
-            end
-
-            upsampled_data[new_coords] = new_du
-          end
-        end
-      end
     end
 
     def decode_sequential(bit_reader, dc_table, ac_table, du_row, du_col)
@@ -122,7 +79,7 @@ module StumpyJPEG
       i = s_start
       while i <= s_end
         byte = ac_table.decode_from_io(bit_reader)
-        
+
         hi = byte >> 4
         lo = byte & 0x0F
 
@@ -153,7 +110,7 @@ module StumpyJPEG
         @end_of_band_run -= 1
         return
       end
-      
+
       i = s_start
       while i <= s_end
         byte = ac_table.decode_from_io(bit_reader)
@@ -163,7 +120,7 @@ module StumpyJPEG
 
         zero_run = hi
         new_val = 0
-        
+
         case lo
         when 0
           if hi == 0x0F
@@ -187,7 +144,7 @@ module StumpyJPEG
         i += 1
       end
     end
-    
+
     private def refine_ac_non_zeroes(bit_reader, coef, start, stop, zero_run, approx)
       (start..stop).each do |i|
         pos = ZIGZAG[i]
@@ -215,7 +172,7 @@ module StumpyJPEG
         end
       end
     end
-    
+
     private def read_n_extend(bit_reader, magnitude)
       adds = bit_reader.read_bits(magnitude)
       extend_coefficient(adds, magnitude)
@@ -235,10 +192,11 @@ module StumpyJPEG
       @end_of_band_run = 0
     end
 
-    def to_s(io : IO)
-      io.write_byte(component_id)
-      io.write_byte(((h << 4) | v).to_u8)
-      io.write_byte(dqt_table_id)
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      raise "ByteFormat must be BigEndian" if format != IO::ByteFormat::BigEndian
+      format.encode(component_id.to_u8, io)
+      format.encode(((h << 4) | v).to_u8, io)
+      format.encode(dqt_table_id.to_u8, io)
     end
 
     def self.from_io(io)

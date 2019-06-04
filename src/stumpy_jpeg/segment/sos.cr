@@ -15,16 +15,16 @@ module StumpyJPEG
       6 + 2 * number_of_components
     end
 
-    def to_s(io : IO)
-      super io
-      io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
-      io.write_byte(number_of_components.to_u8)
-      components.each do |component|
-        io << component
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      super(io, format)
+      format.encode(length.to_u16, io)
+      format.encode(number_of_components.to_u8, io)
+      selectors.each do |selector|
+        io.write_bytes(selector, format)
       end
-      io.write_byte(spectral_start.to_u8)
-      io.write_byte(spectral_end.to_u8)
-      io.write_byte(((approx_high << 4) | approx_low).to_8)
+      format.encode(spectral_start.to_u8, io)
+      format.encode(spectral_end.to_u8, io)
+      format.encode(((approx_high << 4) | approx_low).to_8, io)
     end
 
     def self.from_io(io)

@@ -22,7 +22,7 @@ module StumpyJPEG
       bytes = Bytes.new(14 + 3 * 0 * 0)
       io.read(bytes)
 
-      self.new(bytes, 0)
+      self.new(0, bytes)
     end
 
     def jfif?
@@ -34,9 +34,9 @@ module StumpyJPEG
       2 + bytes.size
     end
 
-    def to_s(io : IO)
-      super io
-      io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      super(io, format)
+      format.encode(length, io)
       io.write(bytes)
     end
 

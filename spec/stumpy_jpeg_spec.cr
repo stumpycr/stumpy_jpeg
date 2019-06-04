@@ -4,7 +4,8 @@ describe StumpyJPEG do
   # TODO: Write tests
 
   it "writes a file" do
-    false.should eq(false)
+    canvas = StumpyCore::Canvas.new(4, 4)
+    StumpyJPEG.write(canvas, "spec/images/out_image.jpg")
   end
 
   it "reads a file" do
@@ -58,7 +59,7 @@ describe StumpyJPEG do
   it "decodes large images" do
     canvas = StumpyJPEG.read("spec/images/stones.jpeg")
   end
-    
+
   it "decodes images with restart markers" do
     canvas = StumpyJPEG.read("spec/images/alpaca.jpg")
   end

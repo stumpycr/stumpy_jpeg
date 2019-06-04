@@ -7,7 +7,7 @@ module StumpyJPEG
     end
 
     def self.decompose_canvas(canvas : Canvas)
-      matrices = [] of Matrix
+      matrices = [] of Matrix(Int32)
       matrices << Matrix.new(canvas.height, canvas.width) do |i, r, c|
         r, g, b = canvas[c, r].to_rgb8
         y = 0.299 * r + 0.587 * g + 0.114 * b

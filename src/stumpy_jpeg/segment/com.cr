@@ -10,9 +10,9 @@ module StumpyJPEG
       3 + text.bytesize
     end
 
-    def to_s(io : IO)
-      super io
-      io.write_bytes(length.to_u16, IO::ByteFormat::BigEndian)
+    def to_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      super(io, format)
+      format.encode(length.to_u16, io)
       io.write(text.to_slice)
       io.write_byte(0_u8)
     end
