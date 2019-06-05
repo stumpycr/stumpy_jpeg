@@ -19,8 +19,8 @@ module StumpyJPEG
     getter image_width
     getter image_height
 
-    getter max_h
-    getter max_v
+    getter mcu_cols
+    getter mcu_rows
 
     def initialize
       @canvas = Canvas.new(0,0)
@@ -36,8 +36,8 @@ module StumpyJPEG
       @bit_precision = -1
       @image_width = 0
       @image_height = 0
-      @max_h = 1
-      @max_v = 1
+      @mcu_rows = 0
+      @mcu_cols = 0
       @canvas_outdated = false
     end
 
@@ -103,17 +103,19 @@ module StumpyJPEG
       raise "Unsupported decoding mode" if !SUPPORTED_MODES.includes?(marker)
       @progressive = PROGRESSIVE_MODES.includes?(marker)
 
-      sof = Segment::SOF.from_io(io)
-      @number_of_components = sof.number_of_components
-      @bit_precision = sof.bit_precision
-      @image_height = sof.height
-      @image_width = sof.width
-      @max_h = sof.components.max_of { |comp| comp.h }
-      @max_v = sof.components.max_of { |comp| comp.v }
-      sof.components.each do |definition|
+      frame = Segment::SOF.from_io(io)
+      @number_of_components = frame.number_of_components
+      @bit_precision = frame.bit_precision
+      @image_height = frame.height
+      @image_width = frame.width
+      max_h = frame.components.max_of { |comp| comp.h }
+      max_v = frame.components.max_of { |comp| comp.v }
+      frame.components.each do |definition|
         component = Component.new(definition, max_h, max_v, image_width, image_height)
         @components[component.component_id] = component
       end
+      @mcu_rows = (@image_height + 8 * max_v - 1) // (8 * max_v)
+      @mcu_cols = (@image_width + 8 * max_h - 1) // (8 * max_h)
     end
 
     private def parse_sos(io)
@@ -122,7 +124,9 @@ module StumpyJPEG
     end
 
     private def parse_scan(sos, io)
-      mcu_x, mcu_y = calculate_mcu_sizes(sos)
+      c = components[sos.selectors.first.component_id]
+      mcu_x = (sos.selectors.size > 1) ? mcu_cols : c.non_interleaved_mcu_cols
+      mcu_y = (sos.selectors.size > 1) ? mcu_rows : c.non_interleaved_mcu_rows
 
       if progressive
         parse_progressive_scan(sos, io, mcu_x, mcu_y)
@@ -262,24 +266,6 @@ module StumpyJPEG
       components.each do |id, c|
         c.reset_last_dc_value
         c.reset_end_of_band
-      end
-    end
-
-    private def calculate_mcu_sizes(sos)
-      if sos.number_of_components == 1
-        selector = sos.selectors.first
-        component = components[selector.component_id]
-
-        pixels_x = 8 * max_h // component.h
-        pixels_y = 8 * max_v // component.v
-
-        mcu_x = (image_width + pixels_x - 1) // pixels_x
-        mcu_y = (image_height + pixels_y - 1) // pixels_y
-        {mcu_x, mcu_y}
-      else
-        mcu_x = (image_width + 8 * max_h - 1) // (8 * max_h)
-        mcu_y = (image_height + 8 * max_v - 1) // (8 * max_v)
-        {mcu_x, mcu_y}
       end
     end
 
