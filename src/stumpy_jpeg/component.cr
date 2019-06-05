@@ -292,7 +292,7 @@ module StumpyJPEG
     end
   end
 
-  class ComponentSelector
+  class Component::Selector
     getter component_id : Int32
     getter dc_table_id : Int32
     getter ac_table_id : Int32
@@ -305,12 +305,14 @@ module StumpyJPEG
       io.write_byte(((dc_table_id << 4) | ac_table_id).to_u8)
     end
 
-    def self.from_io(io)
-      component_id = io.read_byte.not_nil!.to_i
+    def self.from_io(io : IO, format : IO::ByteFormat = IO::ByteFormat::SystemEndian)
+      raise "ByteFormat must be BigEndian" if format != IO::ByteFormat::BigEndian
 
-      ids = io.read_byte.not_nil!.to_i
-      dc_table_id = ids >> 4
-      ac_table_id = ids & 0x0F
+      component_id = format.decode(UInt8, io).to_i
+      table_ids = format.decode(UInt8, io).to_i
+
+      dc_table_id = table_ids >> 4
+      ac_table_id = table_ids & 0x0F
 
       self.new(component_id, dc_table_id, ac_table_id)
     end

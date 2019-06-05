@@ -1,7 +1,7 @@
 module StumpyJPEG
   class Segment::SOS < Segment
     getter number_of_components : Int32
-    getter selectors : Array(ComponentSelector)
+    getter selectors : Array(Component::Selector)
     getter spectral_start : Int32
     getter spectral_end : Int32
     getter approx_high : Int32
@@ -30,9 +30,8 @@ module StumpyJPEG
     def self.from_io(io)
       length = io.read_bytes(UInt16, IO::ByteFormat::BigEndian)
       number_of_components = io.read_byte.not_nil!.to_i
-      selectors = [] of ComponentSelector
-      number_of_components.times do
-        selectors << ComponentSelector.from_io(io)
+      selectors = Array(Component::Selector).new(number_of_components) do
+        io.read_bytes(Component::Selector, IO::ByteFormat::BigEndian)
       end
       spectral_start = io.read_byte.not_nil!.to_i
       spectral_end = io.read_byte.not_nil!.to_i
