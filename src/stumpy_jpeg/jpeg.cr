@@ -46,10 +46,10 @@ module StumpyJPEG
 
       component_matrices = components.map do |id, component|
         component.idct_transform(quantization_tables[component.dqt_table_id])
-        if component.h == max_h && component.v == max_v
+        if component.sampling_h == 1 && component.sampling_v == 1
           component.upsample_one_to_one
         else
-          component.upsample(max_h, max_v)
+          component.upsample
         end
         Matrix.new(image_height, image_width) do |l, r, c|
           du_x, sample_x = c.divmod(8)
@@ -108,11 +108,12 @@ module StumpyJPEG
       @bit_precision = sof.bit_precision
       @image_height = sof.height
       @image_width = sof.width
-      sof.components.each do |component|
+      @max_h = sof.components.max_of { |comp| comp.h }
+      @max_v = sof.components.max_of { |comp| comp.v }
+      sof.components.each do |definition|
+        component = Component.new(definition, max_h, max_v, image_width, image_height)
         @components[component.component_id] = component
       end
-      @max_h = @components.max_of { |key, comp| comp.h }
-      @max_v = @components.max_of { |key, comp| comp.v }
     end
 
     private def parse_sos(io)
