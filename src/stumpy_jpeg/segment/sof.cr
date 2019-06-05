@@ -4,7 +4,7 @@ module StumpyJPEG
     getter height : Int32
     getter width : Int32
     getter number_of_components : Int32
-    getter components : Array(Component)
+    getter components : Array(Component::Definition)
 
     def initialize(n, @bit_precision, @height, @width, @number_of_components, @components)
       super (Markers::SOF + n)
@@ -34,8 +34,8 @@ module StumpyJPEG
       width = io.read_bytes(UInt16, IO::ByteFormat::BigEndian).to_i
       number_of_components = io.read_byte.not_nil!.to_i
 
-      components = Array(Component).new(number_of_components) do |i|
-        Component.from_io(io)
+      components = Array(Component::Definition).new(number_of_components) do |i|
+        io.read_bytes(Component::Definition, IO::ByteFormat::BigEndian)
       end
 
       self.new(0, bit_precision, height, width, number_of_components, components)
