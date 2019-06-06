@@ -3,46 +3,38 @@ module StumpyJPEG
     SUPPORTED_MODES = {0, 1, 2, 9, 10}.map {|n| Markers::SOF + n}
     PROGRESSIVE_MODES = {2, 10}.map {|n| Markers::SOF + n}
 
-    getter canvas
-    getter comment
-    getter components
-    getter restart_interval
-    getter entropy_dc_tables
-    getter entropy_ac_tables
-    getter quantization_tables
+    getter canvas : Canvas
+    getter comment : String?
+    getter components : Hash(Int32, Component)
+    getter restart_interval : Int32
+    getter entropy_dc_tables : StaticArray(Huffman::Table, 4)
+    getter entropy_ac_tables : StaticArray(Huffman::Table, 4)
+    getter quantization_tables : StaticArray(Quantization::Table, 4)
 
-    getter app
-    getter number_of_components
-    getter progressive
+    getter app : Segment::APP?
+    getter progressive : Bool
 
-    getter bit_precision
-    getter image_width
-    getter image_height
+    getter frame : Segment::SOF?
 
-    getter mcu_cols
-    getter mcu_rows
+    getter mcu_cols : Int32
+    getter mcu_rows : Int32
 
     def initialize
       @canvas = Canvas.new(0,0)
-      @comment = ""
       @components = {} of Int32 => Component
       @restart_interval = 0
       @entropy_dc_tables = uninitialized Huffman::Table[4]
       @entropy_ac_tables = uninitialized Huffman::Table[4]
       @quantization_tables = uninitialized Quantization::Table[4]
-      @app = nil.as(Segment::APP?)
-      @number_of_components = 0
       @progressive = false
-      @bit_precision = -1
-      @image_width = 0
-      @image_height = 0
       @mcu_rows = 0
       @mcu_cols = 0
       @canvas_outdated = false
     end
 
     def update_canvas
-      return false if !@canvas_outdated
+      frame = @frame
+      return false if !@canvas_outdated || !frame
 
       component_matrices = components.map do |id, component|
         component.idct_transform(quantization_tables[component.dqt_table_id])
@@ -51,7 +43,7 @@ module StumpyJPEG
         else
           component.upsample
         end
-        Matrix.new(image_height, image_width) do |l, r, c|
+        Matrix.new(frame.height, frame.width) do |l, r, c|
           du_x, sample_x = c.divmod(8)
           du_y, sample_y = r.divmod(8)
           du = component.upsampled_data[{du_x, du_y}]
@@ -59,7 +51,7 @@ module StumpyJPEG
         end
       end
 
-      color_model = ColorModel.from_number_of_components(number_of_components)
+      color_model = ColorModel.from_number_of_components(frame.number_of_components)
       @canvas = color_model.compose_canvas(component_matrices)
       @canvas_outdated = false
       return true
@@ -104,18 +96,15 @@ module StumpyJPEG
       @progressive = PROGRESSIVE_MODES.includes?(marker)
 
       frame = Segment::SOF.from_io(io)
-      @number_of_components = frame.number_of_components
-      @bit_precision = frame.bit_precision
-      @image_height = frame.height
-      @image_width = frame.width
       max_h = frame.components.max_of { |comp| comp.h }
       max_v = frame.components.max_of { |comp| comp.v }
       frame.components.each do |definition|
-        component = Component.new(definition, max_h, max_v, image_width, image_height)
+        component = Component.new(definition, max_h, max_v, frame.width, frame.height)
         @components[component.component_id] = component
       end
-      @mcu_rows = (@image_height + 8 * max_v - 1) // (8 * max_v)
-      @mcu_cols = (@image_width + 8 * max_h - 1) // (8 * max_h)
+      @mcu_rows = (frame.height + 8 * max_v - 1) // (8 * max_v)
+      @mcu_cols = (frame.width + 8 * max_h - 1) // (8 * max_h)
+      @frame = frame
     end
 
     private def parse_sos(io)
