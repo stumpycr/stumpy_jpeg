@@ -241,7 +241,7 @@ module StumpyJPEG
     end
 
     private def extend_coefficient(bits, magnitude)
-      vt = 1 << (magnitude.to_i - 1)
+      vt = 1 << (-1 + magnitude)
       return bits + 1 + (-1 << magnitude) if bits < vt
       return bits
     end
